@@ -49,6 +49,9 @@ template "/etc/nova/nova-compute.conf" do
   group "nova"
   mode "0600"
   action :create
+  variables(
+            "libvirt_vif_driver" => node["quantum"]["libvirt_vif_driver"]
+            )
   only_if { node["nova"]["network"]["provider"] == "quantum" }
 end
 
