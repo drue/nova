@@ -22,7 +22,7 @@ platform_options=node["nova"]["platform"]
 
 platform_options["nova_cert_packages"].each do |pkg|
   package pkg do
-    action :install
+    action node["osops"]["do_package_upgrades"] == true ? :upgrade : :install
     options platform_options["package_overrides"]
   end
 end
@@ -31,6 +31,5 @@ service "nova-cert" do
   service_name platform_options["nova_cert_service"]
   supports :status => true, :restart => true
   action :enable
-  subscribes :restart, "nova_conf[/etc/nova/nova.conf]", :delayed
-  subscribes :restart, "template[/etc/nova/logging.conf]", :delayed
+  subscribes :restart, "template[/etc/nova/nova.conf]", :delayed
 end

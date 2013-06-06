@@ -23,7 +23,7 @@ platform_options = node["nova"]["platform"]
 
 platform_options["nova_vncproxy_packages"].each do |pkg|
   package pkg do
-    action :install
+    action node["osops"]["do_package_upgrades"] == true ? :upgrade : :install
     options platform_options["package_overrides"]
   end
 end
@@ -31,7 +31,8 @@ end
 # required for vnc console authentication
 platform_options["nova_vncproxy_consoleauth_packages"].each do |pkg|
   package pkg do
-    action :install
+    action node["osops"]["do_package_upgrades"] == true ? :upgrade : :install
+    options platform_options["package_overrides"]
   end
 end
 
@@ -39,14 +40,12 @@ service platform_options["nova_vncproxy_service"] do
   service_name platform_options["nova_vncproxy_service"]
   supports :status => true, :restart => true
   action [:enable, :start]
-  subscribes :restart, "nova_conf[/etc/nova/nova.conf]", :delayed
-  subscribes :restart, "template[/etc/nova/logging.conf]", :delayed
+  subscribes :restart, "template[/etc/nova/nova.conf]", :delayed
 end
 
 service platform_options["nova_vncproxy_consoleauth_service"] do
   service_name platform_options["nova_vncproxy_consoleauth_service"]
   supports :status => true, :restart => true
   action :enable
-  subscribes :restart, "nova_conf[/etc/nova/nova.conf]", :delayed
-  subscribes :restart, "template[/etc/nova/logging.conf]", :delayed
+  subscribes :restart, "template[/etc/nova/nova.conf]", :delayed
 end

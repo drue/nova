@@ -38,7 +38,7 @@ end
 
 nova_compute_packages.each do |pkg|
   package pkg do
-    action :install
+    action node["osops"]["do_package_upgrades"] == true ? :upgrade : :install
     options platform_options["package_overrides"]
   end
 end
@@ -55,17 +55,9 @@ template "/etc/nova/nova-compute.conf" do
   only_if { node["nova"]["network"]["provider"] == "quantum" }
 end
 
-cookbook_file "/etc/nova/nova-compute.conf" do
-  source "nova-compute.conf"
-  mode "0600"
-  owner "nova"
-  group "nova"
-  action :create
-  not_if { node["nova"]["network"]["provider"] == "quantum" }
-end
 
 template "/var/lib/nova/.ssh/config" do
-  source "libvirtd-ssh-config"
+  source "libvirtd-ssh-config.erb"
   owner "nova"
   group "nova"
   mode "0600"
@@ -75,17 +67,20 @@ service "nova-compute" do
   service_name platform_options["nova_compute_service"]
   supports :status => true, :restart => true
   action :enable
-  subscribes :restart, "nova_conf[/etc/nova/nova.conf]", :delayed
-  subscribes :restart, "template[/etc/nova/logging.conf]", :delayed
+  subscribes :restart, "template[/etc/nova/nova.conf]", :delayed
 end
 
 include_recipe "nova::libvirt"
+
+# The bridge checksum issue is fixed with a fill-checksum
+# rule in grizzly (also fixed in upstream libvirt), at least
+# in ubuntu
 
 execute "remove vhost-net module" do
   command "rmmod vhost_net"
   notifies :restart, "service[nova-compute]"
   notifies :restart, "service[libvirt-bin]"
-  only_if "lsmod | grep vhost_net"
+  only_if { node["kernel"]["modules"].has_key?('vhost_net') and node["platform_family"] == "rhel" }
 end
 
 # Sysctl tunables

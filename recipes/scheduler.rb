@@ -30,8 +30,8 @@ end
 
 platform_options["nova_scheduler_packages"].each do |pkg|
   package pkg do
-    action :install
     options platform_options["package_overrides"]
+    action node["osops"]["do_package_upgrades"] == true ? :upgrade : :install
   end
 end
 
@@ -39,8 +39,7 @@ service "nova-scheduler" do
   service_name platform_options["nova_scheduler_service"]
   supports :status => true, :restart => true
   action [:enable, :start]
-  subscribes :restart, "nova_conf[/etc/nova/nova.conf]", :delayed
-  subscribes :restart, "template[/etc/nova/logging.conf]", :delayed
+  subscribes :restart, "template[/etc/nova/nova.conf]", :delayed
 end
 
 include_recipe "nova::nova-scheduler-patch"
