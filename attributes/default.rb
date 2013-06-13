@@ -4,6 +4,9 @@ default["enable_monit"] = false  # OS provides packages                     # cl
 default["developer_mode"] = false  # we want secure passwords by default    # cluster_attribute
 ########################################################################
 
+# set to true to enable debugging output in the logs
+default["nova"]["debug"] = false
+
 default["nova"]["db"]["name"] = "nova"                                      # node_attribute
 default["nova"]["db"]["username"] = "nova"                                  # node_attribute
 
@@ -177,7 +180,8 @@ when "ubuntu"
     "nova_vncproxy_consoleauth_packages" => ["nova-consoleauth"],
     "nova_vncproxy_consoleauth_service" => "nova-consoleauth",
     "nova_vncproxy_consoleauth_process_name" => "nova-consoleauth",
-    "libvirt_packages" => ["libvirt-bin", "pm-utils"],
+    # README(shep): python-libvirt does not get automatically upgraded
+    "libvirt_packages" => ["libvirt-bin", "python-libvirt", "pm-utils"],
     "libvirt_service" => "libvirt-bin",
     "nova_cert_packages" => ["nova-cert"],
     "nova_cert_service" => "nova-cert",
