@@ -89,6 +89,7 @@ default["nova"]["config"]["quota_fixed_ips"] = "40"
 default["nova"]["config"]["quota_instances"] = "20"
 # requires https://review.openstack.org/#/c/8423/
 default["nova"]["config"]["resume_guests_state_on_host_boot"] = false               # node_attribute (inherited from cluster?)
+default["nova"]["config"]["force_config_drive"] = false
 
 # LOGGING VERBOSITY
 # in order of verbosity (most to least)
@@ -186,7 +187,8 @@ when "ubuntu"
     "nova_cert_packages" => ["nova-cert"],
     "nova_cert_service" => "nova-cert",
     "mysql_service" => "mysql",
-    "common_packages" => ["nova-common", "python-nova", "python-novaclient"],
+    "common_packages" => ["nova-common", "python-nova", 
+      "python-novaclient", "python-eventlet"],
     "iscsi_helper" => "tgtadm",
     "iscsi_service" => "tgt",
     "package_overrides" => "-o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef'",

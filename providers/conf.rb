@@ -27,6 +27,18 @@ action :create do
   novncserver_bind = get_bind_endpoint("nova", "novnc-server")
   novncproxy_bind = get_bind_endpoint("nova", "novnc-proxy")
 
+  memcached_endpoints = get_realserver_endpoints("memcached", "memcached", "cache")
+
+  Chef::Log.info("#### #{memcached_endpoints}")
+
+  if memcached_endpoints.empty?
+    memcached_servers = nil
+  else
+    memcached_servers = memcached_endpoints.collect do |endpoint|
+        "#{endpoint["host"]}:#{endpoint["port"]}"
+    end.join(",")
+  end
+
   net_provider = node["nova"]["network"]["provider"]
   if net_provider == "quantum"
     # Get settings from recipe[nova-network::nova-controller]
@@ -145,13 +157,15 @@ action :create do
       "network_options" => network_options,
       "scheduler_max_attempts" => node["nova"]["config"]["scheduler_max_attempts"],
       "vpn_image_id" => node["nova"]["config"]["vpn_image_id"],
+      "force_config_drive" => node["nova"]["config"]["force_config_drive"],
       "cinder_catalog_info" => node["nova"]["services"]["volume"]["cinder_catalog_info"],
       "osapi_compute_listen" => api_bind["host"],
       "osapi_compute_listen_port" => api_bind["port"],
       "ec2_listen" => ec2_bind["host"],
       "ec2_host" => ec2_bind["host"],
       "ec2_listen_port" => ec2_bind["port"],
-      "use_ceilometer" => node.recipe?("ceilometer::ceilometer-compute")
+      "use_ceilometer" => node.recipe?("ceilometer::ceilometer-compute"),
+      "memcached_servers" => memcached_servers
     )
   end
   new_resource.updated_by_last_action(t.updated_by_last_action?)
